@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+
+  spti-backend:
+    image: "nbc/spti-backend"
+    container_name: spti-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING.PROFILES.ACTIVE=default
+    build:
+      context: ./spti-backend
+      dockerfile: Dockerfile.dev
+
+
+  spti-frontend:
+    image: "nbc/spti-frontend"
+    container_name: spti-react
+    restart: always
+    build:
+      context: ./spti-frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /app/node_modules
+      - ./spti-frontend:/app
+    ports:
+      - "3000:3000"
+    
+  nginx:
+    container_name: spti-nginx
+    restart: always
+    build: 
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - '3050:80'
+    depends_on:
+      - spti-frontend
+      - spti-backend
+  
+  tests:
+    container_name: spti-tests
+    build:
+      context: ./spti-frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /app/node_modules
+      - ./spti-frontend:/app
+    command: ["npm", "run", "test"]
